@@ -43,8 +43,8 @@ def setuser_stack(username):
 
 
 @app.route("/")
-@setuser("test")
-@pm.chmod(10, group="test2")
+@setuser("testuser")
+@pm.chmod(10, group="testgroup1")
 def test():
     return "Hello World"
 

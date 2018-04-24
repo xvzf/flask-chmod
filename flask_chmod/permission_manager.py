@@ -26,10 +26,10 @@ class PermissionManagerException(Exception):
 
 class PermissionManager(object):
     """
-    The `PermissionManager` provides a chmod like access control to flask views.
-    Best used in combination with `flask-login`, however after checking the app/request
-    stack, it checks `g.current_user` therefore it is possible to provide a custom
-    authentication framework, e.g.:
+    The `PermissionManager` provides a chmod like access control to flask views
+    (best used in combination with `flask-login`)
+    The extension relies of `ctx.user` or `g.user` to being set (in this order), therefore it is
+    possible to provide a custom authentication framework, e.g.:
 
     .. code-block:: python
 
@@ -49,8 +49,32 @@ class PermissionManager(object):
                 return wrapper
 
             return decorator
+
+
+    If you are providing an extension that manages authentication, it is highly recommended to not use
+    the `g` context, instead you can set ´ctx.user´ like this: ::
+
+        # Import the stack, _app_ctx_stack is only available for flask > 0.8,
+        # if you need to support older versions,
+        # just fall back to _request_ctx_stack
+        try:
+            from flask import _app_ctx_stack as stack
+        except ImportError:
+            from flask import _request_ctx_stack as stack
+
+
+        def setuser_stack(username):
+            def decorator(f):
+                @wraps(f)
+                def wrapper(*args, **kwargs):
+                    ctx = stack.top
+                    ctx.user = username
+                    return f(*args, **kwargs)
+                return wrapper
+            return decorator
+
     """
-    
+
 
     def __init__(self, app=None):
         """
@@ -58,14 +82,14 @@ class PermissionManager(object):
         """
         if app:
             self.init_app(app)
-        
+
 
     def init_app(self, app):
         """
         Initializes the PermissionManager and registers an APP
         """
         app.permission_manager = self
-    
+
 
     @property
     def current_user(self):
@@ -75,7 +99,7 @@ class PermissionManager(object):
         ctx = stack.top
         return getattr(ctx, 'user', None) or getattr(g, 'current_user', None)
 
-    
+
     def groups_for_user(self, callback):
         """
         A decorator that is used to get a function that returns a list of groups where
@@ -88,12 +112,12 @@ class PermissionManager(object):
                 else:
                     return ["test1"]
 
-        
+
         """
 
         self._get_groups_for_user = callback
         return callback
-        
+
 
     def user_in_group(self, user, group):
         """
@@ -107,7 +131,7 @@ class PermissionManager(object):
 
         return False
 
-    
+
 
     def check_granted(self, chmod, user, group):
         """
@@ -116,7 +140,7 @@ class PermissionManager(object):
         # Never trust user input, especially when it comes to permissions ;-)
         if chmod not in [1, 10, 11, 100, 101, 111]:
             raise PermissionManagerException("Invalid chmod, valid values are 1[01]{1,2}")
-        
+
         # 'Parse' the chmod
         user_allowed = int(chmod / 100) > 0
         group_allowed = (int(chmod / 10) % 10) > 0
@@ -131,12 +155,12 @@ class PermissionManager(object):
         if user_allowed:
             if user == self.current_user:
                 return True
-        
+
         # User has to be in a group to gain access to the view
         if group_allowed:
             if self.user_in_group(self.current_user, group):
                 return True
-        
+
         # Default return False
         return False
 
@@ -149,7 +173,7 @@ class PermissionManager(object):
             @pm.chmod(110, user="test", group="users")
             def index():
                 return "Hello World"
-            
+
         :param chmod: Available individual chmod values:
                       - 100 -> 'User'  access is allowed
                       - 010 -> 'Group' access is allowed
@@ -172,5 +196,5 @@ class PermissionManager(object):
                     else:
                         return abort(401)
             return wrapper
-        
+
         return decorator
