@@ -9,11 +9,11 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="flask-chmod",
+    name="flask-chown",
     version="0.1.0b1",
-    description="Flask permissions the UNIX way using Groups and chmod",
+    description="Flask permissions the UNIX way using owner and groups",
     long_description=long_description,
-    url="https://github.com/xvzf/flask-chmod",
+    url="https://github.com/xvzf/flask-chown",
     author="Matthias Riegler",
     author_email="matthias@xvzf.tech",
 
@@ -43,8 +43,8 @@ setup(
     },
 
     project_urls={  # Optional
-        "Bug Reports": "https://github.com/xvzf/flask-chmod/issues",
-        "Source": "https://github.com/xvzf/flask-chmod/",
+        "Bug Reports": "https://github.com/xvzf/flask-chown/issues",
+        "Source": "https://github.com/xvzf/flask-chown/",
     },
 
 )

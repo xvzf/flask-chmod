@@ -1,15 +1,15 @@
 ===========
-flask-chmod
+flask-chown
 ===========
 
-Flask view permission management the UNIX way using groups and a chmod oriented syntax.
+Flask view permission management the UNIX way using owner and groups
 
 Content
 =======
 .. toctree::
    :maxdepth: 4
 
-   flask_chmod
+   flask_chown
 
 
 Example
@@ -20,6 +20,7 @@ Example
   from flask_chmod import PermissionManager
   
   ...
+
   app = Flask(...)
   
   pm = PermissionManager()
@@ -29,12 +30,7 @@ Example
 
   ...
 
-  # 100 -> 'User'  access is allowed
-  # 010 -> 'Group' access is allowed
-  # 001 -> 'Other' access is allowed
-  #
-  # Add up these values to get a valid chmod
   @app.route("/")
-  @pm.chmod(110, user="helloworld", group="test")
+  @pm.chmod(user="helloworld", group="test")
   def index():
       return "Hello World"

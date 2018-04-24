@@ -8,8 +8,8 @@
     :License:
         Apache 2.0
 """
-from flask import abort, g
 from functools import wraps
+from flask import abort, g
 
 try:
     from flask import _app_ctx_stack as stack
@@ -26,7 +26,7 @@ class PermissionManagerException(Exception):
 
 class PermissionManager(object):
     """
-    The `PermissionManager` provides a chmod like access control to flask views
+    The `PermissionManager` provides a POSIX like access control to flask views
     (best used in combination with `flask-login`)
     The extension relies of `ctx.user` or `g.user` to being set (in this order), therefore it is
     possible to provide a custom authentication framework, e.g.:
@@ -51,8 +51,8 @@ class PermissionManager(object):
             return decorator
 
 
-    If you are providing an extension that manages authentication, it is highly recommended to not use
-    the `g` context, instead you can set `ctx.user` like this: ::
+    If you are providing an extension that manages authentication, it is highly recommended to
+    not use the `g` context, instead you can set `ctx.user` like this: ::
 
         # Import the stack, _app_ctx_stack is only available for flask > 0.8,
         # if you need to support older versions,
@@ -132,56 +132,30 @@ class PermissionManager(object):
         return False
 
 
-    @staticmethod
-    def _check_chmod(chmod, msg=None):
+    def check_granted(self, owner, group):
         """
-        Checks if a chmod is valid
+        Checks if a user is granted access to a view based on owner and group
         """
-        # Never trust user input, especially when it comes to permissions ;-)
-        if chmod not in [1, 10, 11, 100, 101, 110, 111]:
-            if not msg:
-                raise PermissionManagerException("Invalid chmod, valid values are 1[01]{1,2}")
-            else:
-                raise PermissionManagerException(msg)
 
-
-    def check_granted(self, chmod, user, group):
-        """
-        Checks if a user is granted access to a view based on chmod
-        """
-        PermissionManager._check_chmod(chmod)
-
-        # 'Parse' the chmod
-        user_allowed = int(chmod / 100) > 0
-        group_allowed = (int(chmod / 10) % 10) > 0
-        other_allowed = (int(chmod % 10)) > 0
-
-        # Base case, access is allowed to 'other', therefore everyone
-        # can access the view
-        if other_allowed:
+        # Base case, user equals the current user
+        if owner and self.current_user == owner:
             return True
 
-        # Another base case, user equals the current user
-        if user_allowed:
-            if user == self.current_user:
-                return True
-
         # User has to be in a group to gain access to the view
-        if group_allowed:
-            if self.user_in_group(self.current_user, group):
-                return True
+        if group and  self.user_in_group(self.current_user, group):
+            return True
 
         # Default return False
         return False
 
 
-    def chmod(self, chmod, user=None, group=None, action=None):
+    def chown(self,owner=None, group=None, action=None):
         """
         A decorator that is used to determine whether a logged in user has access to a view::
 
             @app.route("/")
             # You can pass user and group
-            @pm.chmod(110, user="test", group="users")
+            @pm.chown(owner="test", group="users")
             def index():
                 return "Hello World"
 
@@ -189,40 +163,22 @@ class PermissionManager(object):
             # Or just a group or user
             # It makes no sense to use a 1XX value for chmod, as the user is set to None
             # and cannot be matched against the current user
-            @pm.chmod(10, group="users")
+            @pm.chown(group="users")
             def index():
                 return "Hello World"
 
-        Available individual chmod values:
-            - 100 -> 'User'  access is allowed
-            - 010 -> 'Group' access is allowed
-            - 001 -> 'Other' access is allowed
-
-        Add up the values to get the correct chmod value, e.g. to allow
-        user AND group access: `100 + 10 = 110`
-
-        :param chmod: chmod
-        :param user: user
+        :param owner: owner
         :param group: group
         :param action: lambda which handles redirects/abort whenever access is denied
         """
 
-        # Security counter measurements to prevent unregistered user access
-        # to views which are only restricted by group access and have a chmod
-        # of 1XX. It would just match None == None == True and therefore
-        # grant access to an unprivileged user
-        if not user and chmod in [100, 101, 110, 111]:
-            raise PermissionManagerException("Missing user")
-
-        # Just do the same for group to provide consistency, even though
-        # there is no vulnerability involved
-        if not group and chmod in [110, 10, 111, 11]:
-            raise PermissionManagerException("Missing group")
+        if not owner and not group:
+            raise PermissionManagerException("You have to provide at least one out of owner and group")
 
         def decorator(view):
             @wraps(view)
             def wrapper(*args, **kwargs):
-                if self.check_granted(chmod, user, group):
+                if self.check_granted(owner, group):
                     return view(*args, **kwargs)
                 else:
                     if action:
