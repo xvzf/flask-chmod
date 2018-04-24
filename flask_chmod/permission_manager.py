@@ -170,20 +170,44 @@ class PermissionManager(object):
         A decorator that is used to determine whether a logged in user has access to a view::
 
             @app.route("/")
+            # You can pass user and group
             @pm.chmod(110, user="test", group="users")
             def index():
                 return "Hello World"
 
-        :param chmod: Available individual chmod values:
-                      - 100 -> 'User'  access is allowed
-                      - 010 -> 'Group' access is allowed
-                      - 001 -> 'Other' access is allowed
-                      Add up the values to get the correct chmod value, e.g. to allow
-                      user AND group acces, `100 + 10 = 110`
+            @app.route("/")
+            # Or just a group or user
+            # It makes no sense to use a 1XX value for chmod, as the user is set to None
+            # and cannot be matched against the current user
+            @pm.chmod(10, group="users")
+            def index():
+                return "Hello World"
+
+        Available individual chmod values:
+            - 100 -> 'User'  access is allowed
+            - 010 -> 'Group' access is allowed
+            - 001 -> 'Other' access is allowed
+
+        Add up the values to get the correct chmod value, e.g. to allow
+        user AND group access: `100 + 10 = 110`
+
+        :param chmod: chmod
         :param user: user
         :param group: group
         :param action: lambda which handles redirects/abort whenever access is denied
         """
+
+        # Security counter measurements to prevent unregistered user access
+        # to views which are only restricted by group access and have a chmod
+        # of 1XX. It would just match None == None == True and therefore
+        # grant access to an unprivileged user
+        if not user and chmod in [100, 101, 111]:
+                chmod -= 100
+        
+        # Just do the same for group to provide consistency, even though
+        # there is no vulnerability involved
+        if not group and chmod in [110, 10, 111, 11]:
+                chmod -= 10
 
         def decorator(view):
             @wraps(view)
