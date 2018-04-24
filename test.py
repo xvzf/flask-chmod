@@ -10,6 +10,17 @@ except ImportError:
 app = Flask("Test")
 pm = PermissionManager(app)
 
+
+@pm.groups_for_user
+def groups_for_user(username):
+    if username == "testuser":
+        return ["testgroup1", "testgroup2"]
+    elif username == "testuser2":
+        return ["testgroup1"]
+    else:
+        return []
+
+
 def setuser(username):
     def decorator(f):
         @wraps(f)
@@ -18,6 +29,7 @@ def setuser(username):
             return f(*args, **kwargs)
         return wrapper
     return decorator
+
 
 def setuser_stack(username):
     def decorator(f):
@@ -32,10 +44,9 @@ def setuser_stack(username):
 
 @app.route("/")
 @setuser("test")
-@pm.chmod(100, "test", "test2")
+@pm.chmod(10, group="test2")
 def test():
     return "Hello World"
 
 if __name__ == "__main__":
     app.run()
-    #abc()

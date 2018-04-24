@@ -4,11 +4,12 @@
     :Authors:
         Matthias Riegler <matthias@xvzf.tech>
     :Version:
-        23.04.2018
+        24.04.2018
     :License:
         Apache 2.0
 """
 from flask import abort, g
+from functools import wraps
 
 try:
     from flask import _app_ctx_stack as stack
@@ -74,12 +75,38 @@ class PermissionManager(object):
         ctx = stack.top
         return getattr(ctx, 'user', None) or getattr(g, 'current_user', None)
 
+    
+    def groups_for_user(self, callback):
+        """
+        A decorator that is used to get a function that returns a list of groups where
+        a given user is in.::
+
+            @pm.groups_for_user
+            def groups_for_user(username):
+                if username == "test":
+                    return ["test2", "test3"]
+                else:
+                    return ["test1"]
+
+        
+        """
+
+        self._get_groups_for_user = callback
+        return callback
+        
 
     def user_in_group(self, user, group):
         """
         Checks if a user is member of a given group
         """
+        get_groups = getattr(self, "_get_groups_for_user", lambda user: [])
+
+        # Checks if the user is a groupmember
+        if group in get_groups(user):
+            return True
+
         return False
+
     
 
     def check_granted(self, chmod, user, group):
@@ -102,7 +129,6 @@ class PermissionManager(object):
 
         # Another base case, user equals the current user
         if user_allowed:
-            print("Checking for user", self.current_user)
             if user == self.current_user:
                 return True
         
@@ -136,6 +162,7 @@ class PermissionManager(object):
         """
 
         def decorator(view):
+            @wraps(view)
             def wrapper(*args, **kwargs):
                 if self.check_granted(chmod, user, group):
                     return view(*args, **kwargs)
