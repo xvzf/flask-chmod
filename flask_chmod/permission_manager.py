@@ -52,7 +52,7 @@ class PermissionManager(object):
 
 
     If you are providing an extension that manages authentication, it is highly recommended to not use
-    the `g` context, instead you can set ´ctx.user´ like this: ::
+    the `g` context, instead you can set `ctx.user` like this: ::
 
         # Import the stack, _app_ctx_stack is only available for flask > 0.8,
         # if you need to support older versions,
@@ -132,14 +132,24 @@ class PermissionManager(object):
         return False
 
 
+    @staticmethod
+    def _check_chmod(chmod, msg=None):
+        """
+        Checks if a chmod is valid
+        """
+        # Never trust user input, especially when it comes to permissions ;-)
+        if chmod not in [1, 10, 11, 100, 101, 110, 111]:
+            if not msg:
+                raise PermissionManagerException("Invalid chmod, valid values are 1[01]{1,2}")
+            else:
+                raise PermissionManagerException(msg)
+
 
     def check_granted(self, chmod, user, group):
         """
         Checks if a user is granted access to a view based on chmod
         """
-        # Never trust user input, especially when it comes to permissions ;-)
-        if chmod not in [1, 10, 11, 100, 101, 111]:
-            raise PermissionManagerException("Invalid chmod, valid values are 1[01]{1,2}")
+        PermissionManager._check_chmod(chmod)
 
         # 'Parse' the chmod
         user_allowed = int(chmod / 100) > 0
@@ -201,13 +211,13 @@ class PermissionManager(object):
         # to views which are only restricted by group access and have a chmod
         # of 1XX. It would just match None == None == True and therefore
         # grant access to an unprivileged user
-        if not user and chmod in [100, 101, 111]:
-                chmod -= 100
-        
+        if not user and chmod in [100, 101, 110, 111]:
+            raise PermissionManagerException("Missing user")
+
         # Just do the same for group to provide consistency, even though
         # there is no vulnerability involved
         if not group and chmod in [110, 10, 111, 11]:
-                chmod -= 10
+            raise PermissionManagerException("Missing group")
 
         def decorator(view):
             @wraps(view)

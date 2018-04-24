@@ -6,3 +6,6 @@ docs/_build/
 *.egg*/
 */__pycache__/
 *.pyc
+.tox/
+venv/
+.pytest_cache
