@@ -10,7 +10,7 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
 
 setup(
     name="flask-chown",
-    version="0.1.0b1",
+    version="0.1.0",
     description="Flask permissions the UNIX way using owner and groups",
     long_description=long_description,
     url="https://github.com/xvzf/flask-chown",
@@ -25,7 +25,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Framework :: Flask",
@@ -37,6 +37,8 @@ setup(
     keywords="flask permission flask-login flask-principal",
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
     install_requires=["flask"],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest', 'future'],
 
     extras_require={  # Optional
         "caching support": ["redis"]
