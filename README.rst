@@ -22,7 +22,7 @@ Flask view permission management the UNIX way using owner and groups
 Documentation
 =============
 
-https://flask-chown.readthedocs.io
+https://xvzf.tech/flask-chown
 
 Example
 =======
@@ -30,10 +30,10 @@ Example
 .. code-block:: python
 
   from flask_chwon import PermissionManager
-  
+
   ...
   app = Flask(...)
-  
+
   pm = PermissionManager()
   pm.init_app(app)
   # or
