@@ -18,11 +18,11 @@ Example
 .. code-block:: python
 
   from flask_chmod import PermissionManager
-  
+
   ...
 
   app = Flask(...)
-  
+
   pm = PermissionManager()
   pm.init_app(app)
   # or
