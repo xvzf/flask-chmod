@@ -12,7 +12,6 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
 import sys
 
 sys.path.insert(0, "..")
@@ -26,8 +25,7 @@ author = 'Matthias Riegler'
 # The short X.Y version
 version = '0.1'
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
-
+release = '0.1.2'
 
 
 # Add any Sphinx extension module names here, as strings. They can be
