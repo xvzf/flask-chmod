@@ -16,6 +16,12 @@ try:
 except ImportError:
     from flask import _request_ctx_stack as stack
 
+try:
+    from flask_login import current_user
+except ImportError:
+    # If there is no flask login detected, just drop support
+    current_user = None
+
 
 class PermissionManagerException(Exception):
     """
@@ -97,7 +103,9 @@ class PermissionManager(object):
         :returns: current user name
         """
         ctx = stack.top
-        return getattr(ctx, 'user', None) or getattr(g, 'current_user', None)
+        return str(getattr(ctx, 'user', None) or
+                   getattr(g, 'current_user', None) or
+                   current_user)
 
 
     def groups_for_user(self, callback):
