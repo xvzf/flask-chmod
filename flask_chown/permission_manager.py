@@ -25,8 +25,8 @@ except ImportError:
 
 class PermissionManagerException(Exception):
     """
-    Exception happened during the function annotation, registering functions to get
-    group info about a user or g.current_user is not set
+    Exception happened during the function annotation, registering functions
+    to get group info about a user or g.current_user is not set
     """
 
 
@@ -34,8 +34,9 @@ class PermissionManager(object):
     """
     The `PermissionManager` provides a POSIX like access control to flask views
     (best used in combination with `flask-login`)
-    The extension relies of `ctx.user` or `g.user` to being set (in this order), therefore it is
-    possible to provide a custom authentication framework, e.g.:
+    The extension relies of `ctx.user` or `g.user` to being set
+    (in this order), therefore it is possible to provide a custom
+    authentication framework, e.g.:
 
     .. code-block:: python
 
@@ -57,8 +58,9 @@ class PermissionManager(object):
             return decorator
 
 
-    If you are providing an extension that manages authentication, it is highly recommended to
-    not use the `g` context, instead you can set `ctx.user` like this: ::
+    If you are providing an extension that manages authentication, it is
+    highly recommended to not use the `g` context,
+    instead you can set `ctx.user` like this: ::
 
         # Import the stack, _app_ctx_stack is only available for flask > 0.8,
         # if you need to support older versions,
@@ -81,7 +83,6 @@ class PermissionManager(object):
 
     """
 
-
     def __init__(self, app=None):
         """
         Initializes the PermissionManager
@@ -89,13 +90,11 @@ class PermissionManager(object):
         if app:
             self.init_app(app)
 
-
     def init_app(self, app):
         """
         Initializes the PermissionManager and registers an APP
         """
         app.permission_manager = self
-
 
     @property
     def current_user(self):
@@ -107,11 +106,10 @@ class PermissionManager(object):
                    getattr(g, 'current_user', None) or
                    current_user)
 
-
     def groups_for_user(self, callback):
         """
-        A decorator that is used to get a function that returns a list of groups where
-        a given user is in.::
+        A decorator that is used to get a function that returns a list of
+        groups where a given user is in.::
 
             @pm.groups_for_user
             def groups_for_user(username):
@@ -126,7 +124,6 @@ class PermissionManager(object):
         self._get_groups_for_user = callback
         return callback
 
-
     def user_in_group(self, user, group):
         """
         Checks if a user is member of a given group
@@ -139,7 +136,6 @@ class PermissionManager(object):
 
         return False
 
-
     def check_granted(self, owner, group):
         """
         Checks if a user is granted access to a view based on owner and group
@@ -150,16 +146,16 @@ class PermissionManager(object):
             return True
 
         # User has to be in a group to gain access to the view
-        if group and  self.user_in_group(self.current_user, group):
+        if group and self.user_in_group(self.current_user, group):
             return True
 
         # Default return False
         return False
 
-
-    def chown(self,owner=None, group=None, action=None):
+    def chown(self, owner=None, group=None, action=None):
         """
-        A decorator that is used to determine whether a logged in user has access to a view::
+        A decorator that is used to determine whether a logged in user has
+        access to a view::
 
             @app.route("/")
             # You can pass user and group
@@ -168,20 +164,19 @@ class PermissionManager(object):
                 return "Hello World"
 
             @app.route("/")
-            # Or just a group or user
-            # It makes no sense to use a 1XX value for chmod, as the user is set to None
-            # and cannot be matched against the current user
             @pm.chown(group="users")
             def index():
                 return "Hello World"
 
         :param owner: owner
         :param group: group
-        :param action: lambda which handles redirects/abort whenever access is denied
+        :param action: lambda which handles redirects/abort whenever access
+                       is denied
         """
 
         if not owner and not group:
-            raise PermissionManagerException("You have to provide at least one out of owner and group")
+            raise PermissionManagerException("You have to provide at least \
+                                             one out of owner and group")
 
         def decorator(view):
             @wraps(view)
