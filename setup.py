@@ -10,7 +10,7 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
 
 setup(
     name="flask-chown",
-    version="0.1.2",
+    version="0.2.0",
     description="Flask permissions the UNIX way using owner and groups",
     long_description=long_description,
     url="https://github.com/xvzf/flask-chown",
@@ -30,7 +30,6 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Framework :: Flask",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
     ],
 
