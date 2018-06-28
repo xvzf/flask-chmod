@@ -1,1 +1,2 @@
 from .permission_manager import PermissionManager, PermissionManagerException
+from .permission_manager_redis import CachedPermissionManager

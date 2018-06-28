@@ -1,6 +1,3 @@
-# Python 2.7 compatibility
-from __future__ import absolute_import, division, print_function
-from builtins import super
 import unittest
 from .helper import mkapp, setuser, setuser_stack
 
@@ -30,9 +27,13 @@ class PermissionManagerBaseTest(unittest.TestCase):
             owner=None,
             group=None):
         """ Creates a client """
-        client = mkapp(self._setuser, self._groups_for_user, current_user,
-                       owner, group, self._mkapp_factory).test_client()
-        return client.open("/").status_code
+        app, _ = mkapp(self._setuser,
+                       self._groups_for_user,
+                       current_user,
+                       owner,
+                       group,
+                       self._mkapp_factory)
+        return app.test_client().open("/").status_code
 
 
 class PermissionManagerAccessTestCase(PermissionManagerBaseTest):
