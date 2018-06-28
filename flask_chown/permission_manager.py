@@ -1,39 +1,42 @@
+# -*- coding: utf-8 -*-
 """
-    :Filename:
-        permission_manager.py
-    :Authors:
-        Matthias Riegler <matthias@xvzf.tech>
-    :Version:
-        24.04.2018
-    :License:
-        Apache 2.0
+    flask_chown.permission_manager
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Most basic Permission Manager
+
+    :copyright: (c) 2018 by Matthias Riegler.
+    :license: APACHEv2, see LICENSE.md for more details.
 """
+import logging
 from functools import wraps
 from flask import abort, g
+
+logger = logging.getLogger(__name__)
 
 try:
     from flask import _app_ctx_stack as stack
 except ImportError:
     from flask import _request_ctx_stack as stack
+    logging.warning("It is recommended to update flask to a current version")
 
 try:
     from flask_login import current_user
 except ImportError:
     # If there is no flask login detected, just drop support
     current_user = None
+    logging.warning("No flask-login available")
 
 
 class PermissionManagerException(Exception):
-    """
-    Exception happened during the function annotation, registering functions
-    to get group info about a user or g.current_user is not set
+    """ Exception happened during the function annotation, registering
+    functions to get group info about a user or g.current_user is not set
     """
 
 
 class PermissionManager(object):
-    """
-    The `PermissionManager` provides a POSIX like access control to flask views
-    (best used in combination with `flask-login`)
+    """ The `PermissionManager` provides a POSIX like access control to
+    flask views (best used in combination with `flask-login`)
     The extension relies of `ctx.user` or `g.user` to being set
     (in this order), therefore it is possible to provide a custom
     authentication framework, e.g.:
@@ -84,16 +87,12 @@ class PermissionManager(object):
     """
 
     def __init__(self, app=None):
-        """
-        Initializes the PermissionManager
-        """
+        """ Initializes the PermissionManager """
         if app:
             self.init_app(app)
 
     def init_app(self, app):
-        """
-        Initializes the PermissionManager and registers an APP
-        """
+        """ Initializes the PermissionManager and registers an APP """
         app.permission_manager = self
 
     @property
@@ -107,8 +106,7 @@ class PermissionManager(object):
                    current_user)
 
     def groups_for_user(self, callback):
-        """
-        A decorator that is used to get a function that returns a list of
+        """ A decorator that is used to get a function that returns a list of
         groups where a given user is in.::
 
             @pm.groups_for_user
@@ -118,16 +116,13 @@ class PermissionManager(object):
                 else:
                     return ["test1"]
 
-
         """
 
         self._get_groups_for_user = callback
         return callback
 
     def user_in_group(self, user, group):
-        """
-        Checks if a user is member of a given group
-        """
+        """ Checks if a user is member of a given group """
         get_groups = getattr(self, "_get_groups_for_user", lambda user: [])
 
         # Checks if the user is a groupmember
@@ -137,9 +132,8 @@ class PermissionManager(object):
         return False
 
     def check_granted(self, owner, group):
-        """
-        Checks if a user is granted access to a view based on owner and group
-        """
+        """ Checks if a user is granted access to a view based on owner
+        and group """
 
         # Base case, user equals the current user
         if owner and self.current_user == owner:
@@ -153,8 +147,7 @@ class PermissionManager(object):
         return False
 
     def chown(self, owner=None, group=None, action=None):
-        """
-        A decorator that is used to determine whether a logged in user has
+        """ A decorator that is used to determine whether a logged in user has
         access to a view::
 
             @app.route("/")
@@ -175,8 +168,8 @@ class PermissionManager(object):
         """
 
         if not owner and not group:
-            raise PermissionManagerException("You have to provide at least \
-                                             one out of owner and group")
+            raise PermissionManagerException("You have to provide at least" +
+                                             "one out of owner and group")
 
         def decorator(view):
             @wraps(view)
