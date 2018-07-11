@@ -103,7 +103,7 @@ class PermissionManager(object):
         ctx = stack.top
         return str(getattr(ctx, 'user', None) or
                    getattr(g, 'current_user', None) or
-                   current_user)
+                   current_user.username)
 
     def groups_for_user(self, callback):
         """ A decorator that is used to get a function that returns a list of
